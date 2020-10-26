@@ -1,0 +1,9 @@
+tweepy
+Image
+numpy
+imutils
+contours
+scikit-image
+opencv-python
+twitter-dl
+argparse
