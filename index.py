@@ -162,7 +162,7 @@ def check_mentions(api, keywords, since_id):
                             else:
                                 logger.info(f"No highlights detected")
                                 api.update_status(
-                                    status="I cannot see the light in this picture. @' + tweet.user.screen_name",
+                                    status='I cannot see the light in this picture. @' + tweet.user.screen_name,
                                     in_reply_to_status_id=tweet.id
                                 )
                         # elif mediaUrl.lower().find('mp4') != -1:
