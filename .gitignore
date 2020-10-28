@@ -4,3 +4,4 @@ sinceId.txt
 
 __pycache__
 processed/*
+test/processed/*
