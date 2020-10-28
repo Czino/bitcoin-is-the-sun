@@ -1,7 +1,10 @@
 import logging
+import sys
 import cv2
 import colorsys
 import time
+import os.path
+
 from colorThief import ColorThief
 from PIL import Image
 import numpy
@@ -12,11 +15,6 @@ from imutils import contours
 from skimage import measure
 import imutils
 from blend_modes import grain_merge
-import argparse
-
-ap = argparse.ArgumentParser()
-ap.add_argument("-s", "--since", required=True, help="id of when mentions should be listened to")
-args = vars(ap.parse_args())
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -53,7 +51,7 @@ def processImage(image):
     thresh = cv2.dilate(thresh, None, iterations=4)
 
     labels = measure.label(thresh, connectivity=2, background=0)
-    mask = numpy.zeros(thresh.shape, dtype="uint8")
+    mask = numpy.zeros(thresh.shape, dtype='uint8')
     # loop over the unique components
     for label in numpy.unique(labels):
         # if this is the background label, ignore it
@@ -61,11 +59,11 @@ def processImage(image):
             continue
         # otherwise, construct the label mask and count the
         # number of pixels 
-        labelMask = numpy.zeros(thresh.shape, dtype="uint8")
+        labelMask = numpy.zeros(thresh.shape, dtype='uint8')
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
         # if the number of pixels in the component is sufficiently
-        # large, then add it to our mask of "large blobs"
+        # large, then add it to our mask of 'large blobs'
         if numPixels > 300:
             mask = cv2.add(mask, labelMask)
 
@@ -120,17 +118,19 @@ def processImage(image):
 # exit()
 
 
-def check_mentions(api, keywords, since_id):
-    logger.info("Retrieving mentions")
-    new_since_id = since_id
-    for tweet in tweepy.Cursor(api.mentions_timeline, since_id=since_id).items():
-        new_since_id = max(tweet.id, new_since_id)
+def checkMentions(api, keywords, sinceId):
+    logger.info('Retrieving mentions since ' + str(sinceId))
+    newSinceId = sinceId
+    
+    for tweet in tweepy.Cursor(api.mentions_timeline, since_id=sinceId).items():
+        newSinceId = max(tweet.id, newSinceId)
+
         if tweet.in_reply_to_status_id is not None:
             if any(keyword in tweet.text.lower() for keyword in keywords):
-                logger.info(f"Answering to {tweet.user.name}")
-                originalTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode="extended")
+                logger.info(f'Answering to {tweet.user.name} ' + tweet.id_str)
+                originalTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
                 if hasattr(originalTweet, 'quoted_status_id_str'):
-                    originalTweet = api.get_status(originalTweet.quoted_status_id_str, include_entities=True, tweet_mode="extended")
+                    originalTweet = api.get_status(originalTweet.quoted_status_id_str, include_entities=True, tweet_mode='extended')
 
                 if 'media' in originalTweet.entities:
                     for image in  originalTweet.entities['media']:
@@ -145,47 +145,65 @@ def check_mentions(api, keywords, since_id):
                             newImage = processImage(image)
                             if newImage is not None:
                                 cv2.imwrite('processed/' + fileName + '.jpg', newImage)
-                                logger.info(f"Success, reply to " + tweet.id_str)
+                                logger.info(f'Success, reply to ' + tweet.id_str)
                                 media_ids = []
                                 res = api.media_upload(filename='processed/' + fileName + '.jpg',)
                                 media_ids.append(res.media_id)
 
-                                api.update_status(
-                                    status='I have seen the light! @' + tweet.user.screen_name,
-                                    in_reply_to_status_id=tweet.id,
-                                    media_ids=media_ids
-                                )
+                                try:
+                                    api.update_status(
+                                        status='I have seen the light! @' + tweet.user.screen_name,
+                                        in_reply_to_status_id=tweet.id,
+                                        media_ids=media_ids
+                                    )
+                                except:
+                                    e = sys.exc_info()[0]
+                                    logger.error(e)
 
                                 # cv2.imshow('Detection', image)
                                 # cv2.waitKey()
                                 # cv2.destroyAllWindows()
                             else:
-                                logger.info(f"No highlights detected")
-                                api.update_status(
-                                    status='I cannot see the light in this picture. @' + tweet.user.screen_name,
-                                    in_reply_to_status_id=tweet.id
-                                )
+                                logger.info(f'No highlights detected ' + tweet.id_str)
+                                try:
+                                    api.update_status(
+                                        status='I cannot see the light in this picture. @' + tweet.user.screen_name,
+                                        in_reply_to_status_id=tweet.id
+                                    )
+                                except:
+                                    e = sys.exc_info()[0]
+                                    logger.error(e)
+
                         # elif mediaUrl.lower().find('mp4') != -1:
                             # vidcap = cv2.VideoCapture(fileName)
                             # success, image = vidcap.read()
                             # count = 0
-                            # path = "images/" + fileName.replace('source/', '').replace('.mp4', '')
+                            # path = 'images/' + fileName.replace('source/', '').replace('.mp4', '')
                             # while success:
                             #     newImage = processImage(image)
                             #     if newImage is not None:
                             #         cv2.imwrite('processed/' + fileName, newImage)
                             #     success, image = vidcap.read()
 
-    return new_since_id
+    return newSinceId
 
-since_id = int(args['since'])
-auth = tweepy.OAuthHandler(cf.credentials["consumer_key"], cf.credentials["consumer_secret"])
-auth.set_access_token(cf.credentials["access_token"], cf.credentials["access_token_secret"])
+# sinceId = int(args['since'])
+auth = tweepy.OAuthHandler(cf.credentials['consumer_key'], cf.credentials['consumer_secret'])
+auth.set_access_token(cf.credentials['access_token'], cf.credentials['access_token_secret'])
 
 api = tweepy.API(auth)
 
+if not os.path.isfile('sinceId.txt'):
+    with open('sinceId.txt', 'w') as saveFile:
+        saveFile.write('1')
 
 while True:
-    since_id = check_mentions(api, ["light"], since_id)
-    logger.info("Waiting...")
+    with open('sinceId.txt', 'r') as readFile:
+        sinceId = readFile.read()
+        sinceId = int(sinceId)
+
+    sinceId = checkMentions(api, ['light'], sinceId)
+    with open('sinceId.txt', 'w') as saveFile:
+        saveFile.write(str(sinceId))
+    logger.info('Waiting...')
     time.sleep(60)

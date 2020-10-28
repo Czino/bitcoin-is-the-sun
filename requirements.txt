@@ -6,5 +6,4 @@ contours
 scikit-image
 opencv-python
 twitter-dl
-argparse
 blend_modes
