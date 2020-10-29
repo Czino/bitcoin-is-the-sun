@@ -4,7 +4,7 @@ import numpy
 from imutils import contours
 from skimage import measure
 import imutils
-from blend_modes import grain_merge
+from blend_modes import hard_light
 
 bitcoinLogo = cv2.imread('assets/bitcoin.png', -1)
 
@@ -18,7 +18,7 @@ def processImage(image):
     lower = 255
     while lower > 200 and not hasBeenEdited:
         grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(grayImage, (15, 15), 0)
+        blurred = cv2.GaussianBlur(grayImage, (21, 21), 0)
         thresh = cv2.threshold(blurred, lower, 255, cv2.THRESH_BINARY)[1]
         thresh = cv2.erode(thresh, None, iterations=4)
         thresh = cv2.dilate(thresh, None, iterations=4)
@@ -81,11 +81,14 @@ def processImage(image):
             )
 
             smallBitcoinLogoFloat = smallBitcoinLogo.astype(float)
-            imageFloat = grain_merge(imageFloat, smallBitcoinLogoFloat, 1)
+            imageFloat = hard_light(imageFloat, smallBitcoinLogoFloat, 1)
             image = numpy.uint8(imageFloat)
+
             hasBeenEdited = True
 
     if hasBeenEdited:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+
         return image
     else:
         return None
