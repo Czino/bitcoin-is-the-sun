@@ -106,29 +106,25 @@ def checkMentions(api, keywords, sinceId):
                                 res = api.media_upload(filename='processed/' + fileName + '.jpg',)
                                 media_ids.append(res.media_id)
 
-                                # try:
-                                    # api.update_status(
-                                    #     status='I have seen the light! @' + tweet.user.screen_name,
-                                    #     in_reply_to_status_id=tweet.id,
-                                    #     media_ids=media_ids
-                                    # )
-                                # except:
-                                #     e = sys.exc_info()[0]
-                                #     logger.error(e)
-
-                                # cv2.imshow('Detection', image)
-                                # cv2.waitKey()
-                                # cv2.destroyAllWindows()
+                                try:
+                                    api.update_status(
+                                        status='I have seen the light! @' + tweet.user.screen_name,
+                                        in_reply_to_status_id=tweet.id,
+                                        media_ids=media_ids
+                                    )
+                                except:
+                                    e = sys.exc_info()[0]
+                                    logger.error(e)
                             else:
                                 logger.info(f'No highlights detected {tweet.id_str}')
-                                # try:
-                                    # api.update_status(
-                                    #     status='I cannot see the light in this picture. @' + tweet.user.screen_name,
-                                    #     in_reply_to_status_id=tweet.id
-                                    # )
-                                # except:
-                                #     e = sys.exc_info()[0]
-                                #     logger.error(e)
+                                try:
+                                    api.update_status(
+                                        status='I cannot see the light in this picture. @' + tweet.user.screen_name,
+                                        in_reply_to_status_id=tweet.id
+                                    )
+                                except:
+                                    e = sys.exc_info()[0]
+                                    logger.error(e)
                         else:
                             logger.info(f'Not supported format for {mediaUrl}')
     return newSinceId
