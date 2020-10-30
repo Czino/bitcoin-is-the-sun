@@ -1,9 +1,10 @@
+from PIL import Image
 import os
 import cv2
 import imageUtils
 import videoUtils
 files = os.listdir('test')
-files = set(files).difference(set(['.gitkeep', '.DS_Store', 'processed']))
+files = set(files).difference(set(['.gitkeep', '.DS_Store', 'test/processed']))
 
 for fileName in files:
     # print('Processing', fileName)
@@ -14,11 +15,12 @@ for fileName in files:
             cv2.imwrite(f'test/processed/{fileName}', newImage)
         else:
             print(f'No highlights detected for {fileName}')
-    elif fileName.lower().find('mp4') != -1:
+    elif fileName.lower().find('gif') != -1 or fileName.lower().find('mp4') != -1:
         video = cv2.VideoCapture(f'test/{fileName}')
 
         frames = videoUtils.extractFrames(video)
         FPS = videoUtils.getFPS(video)
+        videoLength = len(frames) * (1 / FPS)
         newVideoFrames = []
         for frame in frames:
             newImage = imageUtils.processImage(frame)
@@ -31,15 +33,32 @@ for fileName in files:
         videoWidth = newVideoFrames[0].shape[1]
         size = (videoWidth, videoHeight)
 
-        video = cv2.VideoWriter(f'test/processed/{fileName}.mp4',
-            cv2.VideoWriter_fourcc(*'mp4v'),
-            FPS,
-            size
-        )
+        print(videoLength)
+        if videoLength > .5:
+            fileType = 'mp4'
+            video = cv2.VideoWriter(f'test/processed/{fileName}.{fileType}',
+                cv2.VideoWriter_fourcc(*'mp4v'),
+                FPS,
+                size
+            )
 
-        for frame in newVideoFrames:
-            video.write(frame)
+            for frame in newVideoFrames:
+                video.write(frame)
 
-        video.release()
-        os.system(f'ffmpeg -i test/processed/{fileName}.mp4 -vcodec libx264 test/processed/{fileName}-final.mp4')
-        os.remove(f'test/processed/{fileName}.mp4')
+            video.release()
+            os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -vcodec libx264 test/processed/{fileName}-final.{fileType}')
+            os.remove(f'test/processed/{fileName}.{fileType}')
+        else:
+            # create GIF
+            fileType = 'gif'
+            gifFrames = []
+            for frame in newVideoFrames:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                gifFrames.append(Image.fromarray(frame))
+
+            gifFrames[0].save(f'test/processed/{fileName}.{fileType}',
+                save_all=True,
+                append_images=gifFrames[1:],
+                duration=1000/FPS,
+                loop=1
+            )
