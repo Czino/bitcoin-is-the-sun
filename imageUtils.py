@@ -15,8 +15,8 @@ def processImage(image):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
     pixels = image.shape[0] * image.shape[1]
 
-    lower = 255
-    while lower > 200 and not hasBeenEdited:
+    lower = 250
+    while lower > 160 and not hasBeenEdited:
         grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(grayImage, (21, 21), 0)
         thresh = cv2.threshold(blurred, lower, 255, cv2.THRESH_BINARY)[1]
