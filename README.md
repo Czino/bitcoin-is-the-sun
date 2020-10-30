@@ -16,3 +16,4 @@ Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your 
 - Look first at original tweet for video/image
 - Process all images in a tweet instead of only the first one
 - Notify when bot gets blocked by Twitter API (supposedly because of spam)
+- preserve video audio
