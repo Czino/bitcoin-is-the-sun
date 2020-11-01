@@ -16,14 +16,7 @@ import config as cf
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-bitcoinLogo = cv2.imread('assets/bitcoin.png', -1)
-
-# originalImage = cv2.imread('input/1320092324593008640.jpg')
-# newImage = imageUtils.processImage(originalImage)
-# cv2.imwrite('processed/image.jpg', newImage)
-# exit()
-
-def processTweet(tweet):
+def processTweet(tweet, username, replyTo):
     hasMedia = False
 
     if hasattr(tweet, 'extended_entities') and 'media' in tweet.extended_entities:
@@ -86,8 +79,8 @@ def processTweet(tweet):
 
                 try:
                     api.update_status(
-                        status='I have seen the light! @' + tweet.user.screen_name,
-                        in_reply_to_status_id=tweet.id,
+                        status='I have seen the light! @' + username,
+                        in_reply_to_status_id=replyTo,
                         media_ids=media_ids
                     )
                 except:
@@ -119,8 +112,8 @@ def processTweet(tweet):
 
                     try:
                         api.update_status(
-                            status='I have seen the light! @' + tweet.user.screen_name,
-                            in_reply_to_status_id=tweet.id,
+                            status='I have seen the light! @' + username,
+                            in_reply_to_status_id=replyTo,
                             media_ids=media_ids
                         )
                     except:
@@ -130,8 +123,8 @@ def processTweet(tweet):
                     logger.info(f'No highlights detected {tweet.id_str}')
                     try:
                         api.update_status(
-                            status='I cannot see the light in this picture. @' + tweet.user.screen_name,
-                            in_reply_to_status_id=tweet.id
+                            status='I cannot see the light in this picture. @' + username,
+                            in_reply_to_status_id=replyTo
                         )
                     except:
                         e = sys.exc_info()[0]
@@ -147,6 +140,8 @@ def checkMentions(api, keywords, sinceId):
 
     for tweet in tweepy.Cursor(api.mentions_timeline, since_id=sinceId).items():
         newSinceId = max(tweet.id, newSinceId)
+        username = tweet.user.screen_name
+        replyTo = tweet.id
 
         if any(keyword in tweet.text.lower() for keyword in keywords):
             logger.info(f'Answering to {tweet.user.name} {tweet.id_str}')
@@ -155,15 +150,15 @@ def checkMentions(api, keywords, sinceId):
             tweet = api.get_status(tweet.id, include_entities=True, tweet_mode='extended')
             replyTweet = None
             quotedTweet = None
-            hasMedia = processTweet(tweet)
+            hasMedia = processTweet(tweet, username, replyTo)
 
             # check if tweet is in reply to
             if hasMedia is False and hasattr(tweet, 'in_reply_to_status_id'):
-                print('original tweet has no media, proceed to check if quoted tweet exists')
+                print('original tweet has no media, proceed to check if replied tweet exists')
                 replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
 
             if replyTweet is not None:
-                hasMedia = processTweet(replyTweet)
+                hasMedia = processTweet(replyTweet, username, replyTo)
 
             # check if tweet has quote
             if hasMedia is False and hasattr(tweet, 'quoted_status_id'):
@@ -171,11 +166,10 @@ def checkMentions(api, keywords, sinceId):
                 quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True, tweet_mode='extended')
 
             if quotedTweet is not None:
-                processTweet(quotedTweet)
+                processTweet(quotedTweet, username, replyTo)
 
     return newSinceId
 
-# sinceId = int(args['since'])
 auth = tweepy.OAuthHandler(cf.credentials['consumer_key'], cf.credentials['consumer_secret'])
 auth.set_access_token(cf.credentials['access_token'], cf.credentials['access_token_secret'])
 
