@@ -7,7 +7,7 @@ files = os.listdir('test')
 files = set(files).difference(set(['.gitkeep', '.DS_Store', 'test/processed']))
 
 for fileName in files:
-    # print('Processing', fileName)
+    print('Processing', fileName)
     if fileName.lower().find('jpg') != -1 or fileName.lower().find('png') != -1:
         originalImage = cv2.imread(f'test/{fileName}')
         newImage = imageUtils.processImage(originalImage)
