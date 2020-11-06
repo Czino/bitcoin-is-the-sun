@@ -3,6 +3,9 @@ Python 3
 
 `pip3 install -r requirements.txt`
 
+## To support video uploads install this fork
+`pip3 install --upgrade git+https://github.com/fitnr/tweepy@video-upload-3#egg=tweepy`
+
 Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your API credentials.
 
 # Usage
