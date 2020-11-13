@@ -46,7 +46,7 @@ for fileName in files:
                 video.write(frame)
 
             video.release()
-            os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -vcodec libx264 test/processed/{fileName}-final.{fileType}')
+            os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -vcodec libx264 test/processed/{fileName}-final.{fileType} -y')
             os.remove(f'test/processed/{fileName}.{fileType}')
         else:
             # create GIF

@@ -56,7 +56,7 @@ def processTweet(tweet, username, replyTo):
                         video.write(frame)
 
                     video.release()
-                    os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 processed/{fileName}-final.{fileType}')
+                    os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 processed/{fileName}-final.{fileType} -y')
                     os.remove(f'processed/{fileName}.{fileType}')
                 else:
                     # create GIF
