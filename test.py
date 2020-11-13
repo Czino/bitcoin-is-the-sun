@@ -36,6 +36,10 @@ for fileName in files:
         print(videoLength)
         if videoLength > .5:
             fileType = 'mp4'
+
+            # get audio
+            os.system(f'ffmpeg -i test/{fileName} -vn -acodec copy test/output-audio.aac')
+
             video = cv2.VideoWriter(f'test/processed/{fileName}.{fileType}',
                 cv2.VideoWriter_fourcc(*'mp4v'),
                 FPS,
@@ -46,7 +50,11 @@ for fileName in files:
                 video.write(frame)
 
             video.release()
-            os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -vcodec libx264 test/processed/{fileName}-final.{fileType} -y')
+            if os.path.isfile('test/output-audio.aac'):
+                os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -i test/output-audio.aac -vcodec libx264 -c:a aac -map 0:v:0 -map 1:a:0 test/processed/{fileName}-final.{fileType} -y')
+                os.remove('test/output-audio.aac')
+            else:
+                os.system(f'ffmpeg -i test/processed/{fileName}.{fileType} -vcodec libx264 -c:a aac -map 0:v:0 test/processed/{fileName}-final.{fileType} -y')
             os.remove(f'test/processed/{fileName}.{fileType}')
         else:
             # create GIF

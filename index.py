@@ -25,9 +25,15 @@ def processTweet(tweet, username, replyTo):
             fileName = media['id_str']
 
             if 'video_info' in media:
-                videoUrl = media['video_info']['variants'][0]['url']
+                for media in media['video_info']['variants']:
+                    if media['content_type'] == 'video/mp4':
+                        videoUrl = media['url']
+                        break
 
-                video = cv2.VideoCapture(videoUrl)
+                video = requests.get(videoUrl, allow_redirects=True)
+                open(f'processed/{fileName}.mp4', 'wb').write(video.content)
+                video = cv2.VideoCapture(f'processed/{fileName}.mp4')
+
                 frames = videoUtils.extractFrames(video)
                 FPS = videoUtils.getFPS(video)
                 videoLength = len(frames) * (1 / FPS)
@@ -46,6 +52,8 @@ def processTweet(tweet, username, replyTo):
 
                 if videoLength > .5:
                     fileType = 'mp4'
+
+                    os.system(f'ffmpeg -i processed/{fileName}.mp4 -vn -acodec copy processed/output-audio.aac')
                     video = cv2.VideoWriter(f'processed/{fileName}.{fileType}',
                         cv2.VideoWriter_fourcc(*'mp4v'),
                         FPS,
@@ -57,6 +65,12 @@ def processTweet(tweet, username, replyTo):
 
                     video.release()
                     os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 processed/{fileName}-final.{fileType} -y')
+
+                    if os.path.isfile(f'processed/output-audio.aac'):
+                        os.system(f'ffmpeg -i processed/{fileName}.{fileType} -i processed/output-audio.aac -vcodec libx264 -c:a aac -map 0:v:0 -map 1:a:0 processed/{fileName}-final.{fileType} -y')
+                        os.remove(f'processed/output-audio.aac')
+                    else:
+                        os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 -c:a aac -map 0:v:0 processed/{fileName}-final.{fileType} -y')
                     os.remove(f'processed/{fileName}.{fileType}')
                 else:
                     # create GIF
