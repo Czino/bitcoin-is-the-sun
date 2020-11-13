@@ -10,7 +10,11 @@ Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your 
 
 # Usage
 
-`python3 index.py -t TWEET_ID`
+`python3 index.py`
+
+# Test
+
+run `python3 test.py` to process media in the `test` folder
 
 # TODOs
 - Reduce video compression
