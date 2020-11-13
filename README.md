@@ -17,4 +17,3 @@ Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your 
 - Find out why some videos are 'invalid' and fix it
 - Process all images in a tweet instead of only the first one
 - Notify when bot gets blocked by Twitter API (supposedly because of spam)
-- preserve video audio
