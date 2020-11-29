@@ -1,3 +1,4 @@
+import os.path
 import cv2
 from PIL import Image
 import numpy
