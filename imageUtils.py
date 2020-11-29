@@ -86,9 +86,5 @@ def processImage(image):
 
             hasBeenEdited = True
 
-    if hasBeenEdited:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-
-        return image
-    else:
-        return None
+    image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    return image

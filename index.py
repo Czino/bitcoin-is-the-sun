@@ -32,63 +32,11 @@ def processTweet(tweet, username, replyTo):
 
                 video = requests.get(videoUrl, allow_redirects=True)
                 open(f'processed/{fileName}.mp4', 'wb').write(video.content)
-                video = cv2.VideoCapture(f'processed/{fileName}.mp4')
 
-                frames = videoUtils.extractFrames(video)
-                FPS = videoUtils.getFPS(video)
-                videoLength = len(frames) * (1 / FPS)
-
-                newVideoFrames = []
-                for frame in frames:
-                    newImage = imageUtils.processImage(frame)
-                    if newImage is not None:
-                        newVideoFrames.append(newImage)
-                    else:
-                        newVideoFrames.append(frame)
-
-                videoHeight = newVideoFrames[0].shape[0]
-                videoWidth = newVideoFrames[0].shape[1]
-                size = (videoWidth, videoHeight)
-
-                if videoLength > .5:
-                    fileType = 'mp4'
-
-                    os.system(f'ffmpeg -i processed/{fileName}.mp4 -vn -acodec copy processed/output-audio.aac')
-                    video = cv2.VideoWriter(f'processed/{fileName}.{fileType}',
-                        cv2.VideoWriter_fourcc(*'mp4v'),
-                        FPS,
-                        size
-                    )
-
-                    for frame in newVideoFrames:
-                        video.write(frame)
-
-                    video.release()
-                    os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 processed/{fileName}-final.{fileType} -y')
-
-                    if os.path.isfile(f'processed/output-audio.aac'):
-                        os.system(f'ffmpeg -i processed/{fileName}.{fileType} -i processed/output-audio.aac -vcodec libx264 -c:a aac -map 0:v:0 -map 1:a:0 processed/{fileName}-final.{fileType} -y')
-                        os.remove(f'processed/output-audio.aac')
-                    else:
-                        os.system(f'ffmpeg -i processed/{fileName}.{fileType} -vcodec libx264 -c:a aac -map 0:v:0 processed/{fileName}-final.{fileType} -y')
-                    os.remove(f'processed/{fileName}.{fileType}')
-                else:
-                    # create GIF
-                    fileType = 'gif'
-                    gifFrames = []
-                    for frame in newVideoFrames:
-                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        gifFrames.append(Image.fromarray(frame))
-
-                    gifFrames[0].save(f'processed/{fileName}-final.{fileType}',
-                        save_all=True,
-                        append_images=gifFrames[1:],
-                        duration=FPS,
-                        loop=1
-                    )
+                pathToVideo = videoUtils.processVideo(f'processed/{fileName}.mp4', fileName, 'processed')
 
                 media_ids = []
-                res = api.media_upload(filename=f'processed/{fileName}-final.{fileType}')
+                res = api.media_upload(filename=pathToVideo)
                 media_ids.append(res.media_id)
 
                 try:
@@ -198,7 +146,7 @@ while True:
         sinceId = readFile.read()
         sinceId = int(sinceId)
 
-    sinceId = checkMentions(api, ['light'], sinceId)
+    sinceId = checkMentions(api, ['light', 'sparkles'], sinceId)
     with open('sinceId.txt', 'w') as saveFile:
         saveFile.write(str(sinceId))
     logger.info('Waiting...')
