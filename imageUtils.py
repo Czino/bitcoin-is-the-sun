@@ -5,8 +5,9 @@ from imutils import contours
 from skimage import measure
 import imutils
 from blend_modes import hard_light
+dirname = os.path.dirname(__file__)
 
-bitcoinLogo = cv2.imread('assets/bitcoin.png', -1)
+bitcoinLogo = cv2.imread(os.path.join(dirname, 'assets/bitcoin.png'), -1)
 
 def processImage(image):
     h, w, c = image.shape
