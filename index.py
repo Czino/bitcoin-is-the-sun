@@ -17,7 +17,7 @@ import config as cf
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
-currentDirectory = os.getcwd()
+dirname = os.path.dirname(__file__)
 
 def processTweet(tweet, username, replyTo):
     hasMedia = False
@@ -34,9 +34,13 @@ def processTweet(tweet, username, replyTo):
                         break
 
                 video = requests.get(videoUrl, allow_redirects=True)
-                open(f'{currentDirectory}/processed/{fileName}.mp4', 'wb').write(video.content)
+                open(os.path.join(dirname, f'processed/{fileName}.mp4'), 'wb').write(video.content)
 
-                pathToVideo = videoUtils.processVideo(f'{currentDirectory}/processed/{fileName}.mp4', fileName, f'{currentDirectory}/processed')
+                pathToVideo = videoUtils.processVideo(
+                    os.path.join(dirname, f'processed/{fileName}.mp4'),
+                    fileName,
+                    os.path.join(dirname, f'processed')
+                )
 
                 media_ids = []
                 res = api.media_upload(filename=pathToVideo)
@@ -69,10 +73,10 @@ def processTweet(tweet, username, replyTo):
             if mediaUrl.lower().find('jpg') != -1 or mediaUrl.lower().find('png') != -1:
                 newImage = imageUtils.processImage(image)
                 if newImage is not None:
-                    cv2.imwrite(f'{currentDirectory}/processed/' + fileName + '.jpg', newImage)
+                    cv2.imwrite(os.path.join(dirname, f'processed/' + fileName + '.jpg'), newImage)
                     logger.info(f'Success, reply to {tweet.id_str}')
                     media_ids = []
-                    res = api.media_upload(filename=f'{currentDirectory}/processed/{fileName}.jpg',)
+                    res = api.media_upload(filename=os.path.join(dirname, f'processed/{fileName}.jpg'),)
                     media_ids.append(res.media_id)
 
                     try:
@@ -140,17 +144,17 @@ auth.set_access_token(cf.credentials['access_token'], cf.credentials['access_tok
 
 api = tweepy.API(auth)
 
-if not os.path.isfile(f'{currentDirectory}/sinceId.txt'):
-    with open(f'{currentDirectory}/sinceId.txt', 'w') as saveFile:
+if not os.path.isfile(os.path.join(dirname, 'sinceId.txt')):
+    with open(os.path.join(dirname, 'sinceId.txt'), 'w') as saveFile:
         saveFile.write('1')
 
 while True:
-    with open(f'{currentDirectory}/sinceId.txt', 'r') as readFile:
+    with open(os.path.join(dirname, 'sinceId.txt'), 'r') as readFile:
         sinceId = readFile.read()
         sinceId = int(sinceId)
 
     sinceId = checkMentions(api, ['light', 'sparkles'], sinceId)
-    with open(f'{currentDirectory}/sinceId.txt', 'w') as saveFile:
+    with open(os.path.join(dirname, 'sinceId.txt'), 'w') as saveFile:
         saveFile.write(str(sinceId))
     logger.info('Waiting...')
     time.sleep(60)
