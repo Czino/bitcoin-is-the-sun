@@ -22,7 +22,7 @@ def processVideo(videoPath, fileName, path):
     if videoLength > .5:
         fileType = 'mp4'
 
-        os.system(f'ffmpeg -i {videoPath} -vn -acodec copy {path}/output-audio.aac')
+        os.system(f'ffmpeg -i {videoPath} -vn -acodec copy {path}/output-audio.aac -y')
         processedVideo = cv2.VideoWriter(f'{path}/{fileName}-pre.{fileType}',
             cv2.VideoWriter_fourcc(*'mp4v'),
             FPS,
