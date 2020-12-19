@@ -4,4 +4,6 @@ sinceId.txt
 
 __pycache__
 processed/*
+!processed/.gitkeep
 test/processed/*
+!test/processed/.gitkeep
