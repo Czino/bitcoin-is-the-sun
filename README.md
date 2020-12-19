@@ -3,6 +3,7 @@ Python 3
 `pip3 install -r requirements.txt`
 
 ffmpeg
+`sudo apt install ffmpeg`
 
 # Twitter API connection
 Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your API credentials.
