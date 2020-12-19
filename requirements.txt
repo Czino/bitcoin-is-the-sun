@@ -1,5 +1,5 @@
 tweepy
-Image
+Pillow
 numpy
 imutils
 contours
