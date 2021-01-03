@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 dirname = os.path.dirname(__file__)
 
-def processTweet(tweet, username, replyTo):
+def processTweet(tweet, username, replyTo, bold):
     hasMedia = False
 
     if hasattr(tweet, 'extended_entities') and 'media' in tweet.extended_entities:
@@ -39,7 +39,8 @@ def processTweet(tweet, username, replyTo):
                 pathToVideo = videoUtils.processVideo(
                     os.path.join(dirname, f'processed/{fileName}.mp4'),
                     fileName,
-                    os.path.join(dirname, f'processed')
+                    os.path.join(dirname, f'processed'),
+                    bold
                 )
 
                 media_ids = []
@@ -71,7 +72,7 @@ def processTweet(tweet, username, replyTo):
             image = cv2.imdecode(nparr,cv2.IMREAD_UNCHANGED)
 
             if mediaUrl.lower().find('jpg') != -1 or mediaUrl.lower().find('png') != -1:
-                newImage = imageUtils.processImage(image)
+                newImage = imageUtils.processImage(image, bold)
                 if newImage is not None:
                     cv2.imwrite(os.path.join(dirname, f'processed/' + fileName + '.jpg'), newImage)
                     logger.info(f'Success, reply to {tweet.id_str}')
@@ -114,12 +115,16 @@ def checkMentions(api, keywords, sinceId):
 
         if any(keyword in tweet.text.lower() for keyword in keywords):
             logger.info(f'Answering to {tweet.user.name} {tweet.id_str}')
+            bold = '/bold' in tweet.text.lower()
+
+            if bold:
+                print('Bold image requested')
 
             # check if actual tweet has media
             tweet = api.get_status(tweet.id, include_entities=True, tweet_mode='extended')
             replyTweet = None
             quotedTweet = None
-            hasMedia = processTweet(tweet, username, replyTo)
+            hasMedia = processTweet(tweet, username, replyTo, bold)
 
             # check if tweet is in reply to
             if hasMedia is False and hasattr(tweet, 'in_reply_to_status_id'):
@@ -127,7 +132,7 @@ def checkMentions(api, keywords, sinceId):
                 replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
 
             if replyTweet is not None:
-                hasMedia = processTweet(replyTweet, username, replyTo)
+                hasMedia = processTweet(replyTweet, username, replyTo, bold)
 
             # check if tweet has quote
             if hasMedia is False and hasattr(tweet, 'quoted_status_id'):
@@ -135,7 +140,7 @@ def checkMentions(api, keywords, sinceId):
                 quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True, tweet_mode='extended')
 
             if quotedTweet is not None:
-                processTweet(quotedTweet, username, replyTo)
+                processTweet(quotedTweet, username, replyTo, bold)
 
     return newSinceId
 

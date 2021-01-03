@@ -6,11 +6,12 @@ from imutils import contours
 from skimage import measure
 import imutils
 from blend_modes import hard_light
+from blend_modes import normal
 dirname = os.path.dirname(__file__)
 
 bitcoinLogo = cv2.imread(os.path.join(dirname, 'assets/bitcoin.png'), -1)
 
-def processImage(image):
+def processImage(image, bold):
     h, w, c = image.shape
 
     hasBeenEdited = False
@@ -83,7 +84,10 @@ def processImage(image):
             )
 
             smallBitcoinLogoFloat = smallBitcoinLogo.astype(float)
-            imageFloat = hard_light(imageFloat, smallBitcoinLogoFloat, 1)
+            if bold:
+                imageFloat = normal(imageFloat, smallBitcoinLogoFloat, 1)
+            else:
+                imageFloat = hard_light(imageFloat, smallBitcoinLogoFloat, 1)
             image = numpy.uint8(imageFloat)
 
             hasBeenEdited = True

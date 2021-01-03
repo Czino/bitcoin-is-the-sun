@@ -6,7 +6,7 @@ import imageUtils
 def getFPS(video):
     return video.get(cv2.CAP_PROP_FPS)
 
-def processVideo(videoPath, fileName, path):
+def processVideo(videoPath, fileName, path, bold):
     video = cv2.VideoCapture(videoPath)
 
     success,image = video.read()
@@ -34,7 +34,7 @@ def processVideo(videoPath, fileName, path):
             progress = int(i / frames * 100)
             print(f'Processing Video: {str(progress)}% ({i}/{frames})', end="\r")
 
-            image = imageUtils.processImage(image)
+            image = imageUtils.processImage(image, bold)
             processedVideo.write(image)
 
             i = i + 1
@@ -58,7 +58,7 @@ def processVideo(videoPath, fileName, path):
         while success:
             progress = int(i / frames * 100)
             print(f'Processing GIF: {str(progress)}% (frame {i}/{frames})', end="\r")
-            image = imageUtils.processImage(image)
+            image = imageUtils.processImage(image, bold)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
             gifFrames.append(Image.fromarray(image))
