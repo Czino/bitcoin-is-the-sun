@@ -158,7 +158,7 @@ while True:
         sinceId = readFile.read()
         sinceId = int(sinceId)
 
-    sinceId = checkMentions(api, ['light', 'sparkles'], sinceId)
+    sinceId = checkMentions(api, ['light', 'sparkles', 'luz', 'licht', 'illumin'], sinceId)
     with open(os.path.join(dirname, 'sinceId.txt'), 'w') as saveFile:
         saveFile.write(str(sinceId))
     logger.info('Waiting...')
