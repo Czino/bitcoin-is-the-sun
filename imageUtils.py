@@ -14,12 +14,12 @@ bitcoinLogo = cv2.imread(os.path.join(dirname, 'assets/bitcoin.png'), -1)
 def processImage(image, bold):
     h, w, c = image.shape
 
-    hasBeenEdited = False
+    hasSeenTheLight = False
     image = cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
     pixels = image.shape[0] * image.shape[1]
 
     lower = 250
-    while lower > 160 and not hasBeenEdited:
+    while lower > 160 and not hasSeenTheLight:
         grayImage = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(grayImage, (21, 21), 0)
         thresh = cv2.threshold(blurred, lower, 255, cv2.THRESH_BINARY)[1]
@@ -90,7 +90,7 @@ def processImage(image, bold):
                 imageFloat = hard_light(imageFloat, smallBitcoinLogoFloat, 1)
             image = numpy.uint8(imageFloat)
 
-            hasBeenEdited = True
+            hasSeenTheLight = True
 
     image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-    return image
+    return (image, hasSeenTheLight)

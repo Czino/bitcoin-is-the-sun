@@ -36,7 +36,7 @@ def processTweet(tweet, username, replyTo, bold):
                 video = requests.get(videoUrl, allow_redirects=True)
                 open(os.path.join(dirname, f'processed/{fileName}.mp4'), 'wb').write(video.content)
 
-                pathToVideo = videoUtils.processVideo(
+                pathToVideo, hasSeenTheLightInVideo = videoUtils.processVideo(
                     os.path.join(dirname, f'processed/{fileName}.mp4'),
                     fileName,
                     os.path.join(dirname, f'processed'),
@@ -44,24 +44,36 @@ def processTweet(tweet, username, replyTo, bold):
                 )
 
                 media_ids = []
-                res = api.media_upload(filename=pathToVideo)
-                media_ids.append(res.media_id)
+                if hasSeenTheLightInVideo:
+                    res = api.media_upload(filename=pathToVideo)
+                    media_ids.append(res.media_id)
 
-                try:
-                    api.update_status(
-                        status='I have seen the light! @' + username,
-                        in_reply_to_status_id=replyTo,
-                        media_ids=media_ids
-                    )
-                except:
-                    e = sys.exc_info()[1]
-                    print(e)
-                    logger.error(e)
-                return hasMedia
+                    try:
+                        api.update_status(
+                            status='I have seen the light! @' + username,
+                            in_reply_to_status_id=replyTo,
+                            media_ids=media_ids
+                        )
+                    except:
+                        e = sys.exc_info()[1]
+                        print(e)
+                        logger.error(e)
+                    return hasMedia
+                else:
+                    try:
+                        api.update_status(
+                            status='I cannot see the light in this video. @' + username,
+                            in_reply_to_status_id=replyTo
+                        )
+                    except:
+                        e = sys.exc_info()[0]
+                        logger.error(e)
 
     if hasattr(tweet, 'entities') and 'media' in tweet.entities:
         for image in tweet.entities['media']:
             hasMedia = True
+            seenTheLight = False
+            media_ids = []
             print('has images')
 
             fileName = image['id_str']
@@ -72,36 +84,38 @@ def processTweet(tweet, username, replyTo, bold):
             image = cv2.imdecode(nparr,cv2.IMREAD_UNCHANGED)
 
             if mediaUrl.lower().find('jpg') != -1 or mediaUrl.lower().find('png') != -1:
-                newImage = imageUtils.processImage(image, bold)
-                if newImage is not None:
+                newImage, hasSeenTheLightInImage = imageUtils.processImage(image, bold)
+                if hasSeenTheLightInImage:
                     cv2.imwrite(os.path.join(dirname, f'processed/' + fileName + '.jpg'), newImage)
                     logger.info(f'Success, reply to {tweet.id_str}')
-                    media_ids = []
                     res = api.media_upload(filename=os.path.join(dirname, f'processed/{fileName}.jpg'),)
                     media_ids.append(res.media_id)
-
-                    try:
-                        api.update_status(
-                            status='I have seen the light! @' + username,
-                            in_reply_to_status_id=replyTo,
-                            media_ids=media_ids
-                        )
-                    except:
-                        e = sys.exc_info()[0]
-                        logger.error(e)
+                    seenTheLight = True
                 else:
                     logger.info(f'No highlights detected {tweet.id_str}')
-                    try:
-                        api.update_status(
-                            status='I cannot see the light in this picture. @' + username,
-                            in_reply_to_status_id=replyTo
-                        )
-                    except:
-                        e = sys.exc_info()[0]
-                        logger.error(e)
+
             else:
                 logger.info(f'Not supported format for {mediaUrl}')
 
+        if seenTheLight:
+            try:
+                api.update_status(
+                    status='I have seen the light! @' + username,
+                    in_reply_to_status_id=replyTo,
+                    media_ids=media_ids
+                )
+            except:
+                e = sys.exc_info()[0]
+                logger.error(e)
+        else:
+            try:
+                api.update_status(
+                    status='I cannot see the light in this picture. @' + username,
+                    in_reply_to_status_id=replyTo
+                )
+            except:
+                e = sys.exc_info()[0]
+                logger.error(e)
     return hasMedia
 
 def checkMentions(api, keywords, sinceId):
@@ -121,7 +135,7 @@ def checkMentions(api, keywords, sinceId):
                 print('Bold image requested')
 
             # check if actual tweet has media
-            tweet = api.get_status(tweet.id, include_entities=True, tweet_mode='extended')
+            tweet = api.get_status(tweet.id, include_entities=True)
             replyTweet = None
             quotedTweet = None
             hasMedia = processTweet(tweet, username, replyTo, bold)
@@ -129,7 +143,7 @@ def checkMentions(api, keywords, sinceId):
             # check if tweet is in reply to
             if hasMedia is False and hasattr(tweet, 'in_reply_to_status_id'):
                 print('original tweet has no media, proceed to check if replied tweet exists')
-                replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
+                replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True)
 
             if replyTweet is not None:
                 hasMedia = processTweet(replyTweet, username, replyTo, bold)
@@ -137,7 +151,7 @@ def checkMentions(api, keywords, sinceId):
             # check if tweet has quote
             if hasMedia is False and hasattr(tweet, 'quoted_status_id'):
                 print('original tweet has no media, proceed to check if quoted tweet exists')
-                quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True, tweet_mode='extended')
+                quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True)
 
             if quotedTweet is not None:
                 processTweet(quotedTweet, username, replyTo, bold)

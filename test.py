@@ -15,11 +15,10 @@ for fileName in files:
     print('Processing', fileName)
     if fileName.lower().find('jpg') != -1 or fileName.lower().find('jpeg') != -1 or fileName.lower().find('png') != -1:
         originalImage = cv2.imread(f'test/{fileName}')
-        newImage = imageUtils.processImage(originalImage, bold)
-        if newImage is not None:
+        newImage, hasSeenTheLightInImage = imageUtils.processImage(originalImage, bold)
+        if hasSeenTheLightInImage:
             cv2.imwrite(f'test/processed/{fileName}', newImage)
         else:
             print(f'No highlights detected for {fileName}')
     elif fileName.lower().find('gif') != -1 or fileName.lower().find('mp4') != -1:
-        print('skip')
-        # videoUtils.processVideo(f'test/{fileName}', fileName, 'test/processed', False)
+        videoUtils.processVideo(f'test/{fileName}', fileName, 'test/processed', False)

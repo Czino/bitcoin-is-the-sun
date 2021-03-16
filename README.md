@@ -9,7 +9,7 @@ ffmpeg
 Copy `config.dist.py` and rename to `config.py`. Replace placeholders with your API credentials.
 
 ## To support video uploads install this fork
-`pip3 install --upgrade git+https://github.com/fitnr/tweepy@video-upload-3#egg=tweepy`
+`pip3 install --upgrade git+https://github.com/tweepy/tweepy@video-upload#egg=tweepy`
 
 # Usage
 

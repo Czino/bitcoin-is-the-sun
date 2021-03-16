@@ -8,7 +8,7 @@ def getFPS(video):
 
 def processVideo(videoPath, fileName, path, bold):
     video = cv2.VideoCapture(videoPath)
-
+    hasSeenTheLight = False
     success,image = video.read()
 
     FPS = getFPS(video)
@@ -34,7 +34,10 @@ def processVideo(videoPath, fileName, path, bold):
             progress = int(i / frames * 100)
             print(f'Processing Video: {str(progress)}% ({i}/{frames})', end="\r")
 
-            image = imageUtils.processImage(image, bold)
+            image, hasSeenTheLightInImage = imageUtils.processImage(image, bold)
+            if hasSeenTheLightInImage:
+                hasSeenTheLight = True
+
             processedVideo.write(image)
 
             i = i + 1
@@ -58,7 +61,11 @@ def processVideo(videoPath, fileName, path, bold):
         while success:
             progress = int(i / frames * 100)
             print(f'Processing GIF: {str(progress)}% (frame {i}/{frames})', end="\r")
-            image = imageUtils.processImage(image, bold)
+            image, hasSeenTheLightInImage = imageUtils.processImage(image, bold)
+
+            if hasSeenTheLightInImage:
+                hasSeenTheLight = True
+
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
             gifFrames.append(Image.fromarray(image))
@@ -73,4 +80,4 @@ def processVideo(videoPath, fileName, path, bold):
             loop=1
         )
 
-    return f'{path}/{fileName}-final.{fileType}'
+    return (f'{path}/{fileName}-final.{fileType}', hasSeenTheLight)
