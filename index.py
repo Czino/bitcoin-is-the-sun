@@ -70,10 +70,10 @@ def processTweet(tweet, username, replyTo, bold):
                         logger.error(e)
 
     if hasattr(tweet, 'entities') and 'media' in tweet.entities:
+        hasMedia = True
+        seenTheLight = False
+        media_ids = []
         for image in tweet.entities['media']:
-            hasMedia = True
-            seenTheLight = False
-            media_ids = []
             print('has images')
 
             fileName = image['id_str']
