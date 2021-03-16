@@ -1,6 +1,8 @@
 .DS_Store
 config.py
-sinceId.txt
+config_mastodon.py
+
+sinceId*.txt
 
 __pycache__
 processed/*

@@ -1,4 +1,5 @@
 tweepy
+Mastodon.py
 Pillow
 numpy
 imutils
