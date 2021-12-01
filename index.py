@@ -130,35 +130,42 @@ def checkMentions(api, keywords, sinceId):
         replyTo = tweet.id
 
         if any(keyword in tweet.text.lower() for keyword in keywords):
-            logger.info(f'Answering to {tweet.user.name} {tweet.id_str}')
-            bold = '/bold' in tweet.text.lower()
+            try:
+                logger.info(f'Answering to {tweet.user.name} {tweet.id_str}')
+                bold = '/bold' in tweet.text.lower()
 
-            if bold:
-                logger.info('Bold image requested')
+                if bold:
+                    logger.info('Bold image requested')
 
-            # check if actual tweet has media
-            tweet = api.get_status(tweet.id, include_entities=True, tweet_mode='extended')
-            replyTweet = None
-            quotedTweet = None
-            hasMedia = processTweet(tweet, username, replyTo, bold)
+                # check if actual tweet has media
+                tweet = api.get_status(tweet.id, include_entities=True, tweet_mode='extended')
+                replyTweet = None
+                quotedTweet = None
+                hasMedia = processTweet(tweet, username, replyTo, bold)
 
-            # check if tweet is in reply to
-            if hasMedia is False and hasattr(tweet, 'in_reply_to_status_id'):
-                logger.info('original tweet has no media, proceed to check if replied tweet exists', tweet.in_reply_to_status_id)
-                replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
+                # check if tweet is in reply to
+                if hasMedia is False and hasattr(tweet, 'in_reply_to_status_id'):
+                    logger.info('original tweet has no media, proceed to check if replied tweet exists', tweet.in_reply_to_status_id)
+                    replyTweet = api.get_status(tweet.in_reply_to_status_id, include_entities=True, tweet_mode='extended')
 
-            if replyTweet is not None:
-                logger.info('reply tweet exists')
-                hasMedia = processTweet(replyTweet, username, replyTo, bold)
+                if replyTweet is not None:
+                    logger.info('reply tweet exists')
+                    hasMedia = processTweet(replyTweet, username, replyTo, bold)
 
-            # check if tweet has quote
-            if hasMedia is False and hasattr(tweet, 'quoted_status_id'):
-                logger.info('reply tweet has no media, proceed to check if quoted tweet exists', tweet.quoted_status_id)
-                quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True, tweet_mode='extended')
+                # check if tweet has quote
+                if hasMedia is False and hasattr(tweet, 'quoted_status_id'):
+                    logger.info('reply tweet has no media, proceed to check if quoted tweet exists', tweet.quoted_status_id)
+                    quotedTweet = api.get_status(tweet.quoted_status_id, include_entities=True, tweet_mode='extended')
 
-            if quotedTweet is not None:
-                logger.info('quotet tweet exists')
-                processTweet(quotedTweet, username, replyTo, bold)
+                if quotedTweet is not None:
+                    logger.info('quotet tweet exists')
+                    processTweet(quotedTweet, username, replyTo, bold)
+            except:
+                e = sys.exc_info()[0]
+                logger.error(e)
+                with open(os.path.join(dirname, 'errors.txt'), 'wa') as saveFile:
+                    saveFile.write(f'Failed answering to {tweet.user.name} {tweet.id_str} \n')
+                    saveFile.write(e)
 
     return newSinceId
 
