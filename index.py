@@ -163,7 +163,7 @@ def checkMentions(api, keywords, sinceId):
             except:
                 e = sys.exc_info()[0]
                 logger.error(e)
-                with open(os.path.join(dirname, 'errors.txt'), 'wa') as saveFile:
+                with open(os.path.join(dirname, 'errors.txt'), 'a') as saveFile:
                     saveFile.write(f'Failed answering to {tweet.user.name} {tweet.id_str} \n')
                     saveFile.write(e)
 
